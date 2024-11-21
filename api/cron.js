@@ -1,21 +1,48 @@
 export function GET(request) {
+  const x = 15;
+  const nbPostsThreshold = 10;
   const now = new Date();
-  const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+  const xMinutesAgo = new Date(now.getTime() - x * 60 * 1000);
 
   return fetch(
-    `https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=neige+paris&sort=latest&since=${tenMinutesAgo.toISOString()}&limit=20`
+    `https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=neige+paris&sort=latest&since=${xMinutesAgo.toISOString()}&limit=20`
   )
     .then((response) => {
       return response.json();
     })
     .then((json) => {
-      if (json && json.posts && json.posts.length && json.posts.length > 10) {
+      if (
+        json &&
+        json.posts &&
+        json.posts.length &&
+        json.posts.length >= nbPostsThreshold
+      ) {
         return fetch(process.env.SET_SNOWING_TRUE).then(() => {
-          return new Response(null, { status: 200 });
+          return new Response(
+            JSON.stringify({
+              message: `Found ${json.posts.length} posts on Bluesky talking about 'neige paris', sounds like it's snowing!`,
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
         });
       } else {
         return fetch(process.env.SET_SNOWING_FALSE).then(() => {
-          return new Response(null, { status: 200 });
+          return new Response(
+            JSON.stringify({
+              message: `Found lest than ${nbPostsThreshold} posts on Bluesky talking about "neige paris", sounds like it's not snowing :(`,
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
         });
       }
     })
