@@ -1,4 +1,10 @@
 export function GET(request) {
+  if (
+    request.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return new Response(null, { status: 401 });
+  }
+
   const x = 15;
   const nbPostsThreshold = 10;
   const now = new Date();
