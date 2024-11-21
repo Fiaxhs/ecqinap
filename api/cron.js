@@ -34,7 +34,7 @@ export function GET(request) {
         return fetch(process.env.SET_SNOWING_FALSE).then(() => {
           return new Response(
             JSON.stringify({
-              message: `Found lest than ${nbPostsThreshold} posts on Bluesky talking about "neige paris", sounds like it's not snowing :(`,
+              message: `Found less than ${nbPostsThreshold} posts on Bluesky talking about "neige paris", sounds like it's not snowing :(`,
             }),
             {
               status: 200,
