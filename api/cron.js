@@ -1,26 +1,27 @@
 export function GET(request) {
-  const x = 15;
-  const nbPostsThreshold = 10;
-  const now = new Date();
-  const xMinutesAgo = new Date(now.getTime() - x * 60 * 1000);
+  // Paris coordinates
+  const lat = 48.8566;
+  const lon = 2.3522;
+
+  // Open-Meteo API - free, no API key required
+  // Weather codes for snow: 71, 73, 75 (snow fall), 77 (snow grains), 85, 86 (snow showers)
+  const snowWeatherCodes = [71, 73, 75, 77, 85, 86];
 
   return fetch(
-    `https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=neige+paris&sort=latest&since=${xMinutesAgo.toISOString()}&limit=20`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code`
   )
     .then((response) => {
       return response.json();
     })
     .then((json) => {
-      if (
-        json &&
-        json.posts &&
-        json.posts.length &&
-        json.posts.length >= nbPostsThreshold
-      ) {
+      const currentWeatherCode = json?.current?.weather_code;
+      const isSnowing = snowWeatherCodes.includes(currentWeatherCode);
+
+      if (isSnowing) {
         return fetch(process.env.SET_SNOWING_TRUE).then(() => {
           return new Response(
             JSON.stringify({
-              message: `Found ${json.posts.length} posts on Bluesky talking about 'neige paris', sounds like it's snowing!`,
+              message: `Weather code ${currentWeatherCode} detected in Paris - it's snowing!`,
             }),
             {
               status: 200,
@@ -34,7 +35,7 @@ export function GET(request) {
         return fetch(process.env.SET_SNOWING_FALSE).then(() => {
           return new Response(
             JSON.stringify({
-              message: `Found less than ${nbPostsThreshold} posts on Bluesky talking about "neige paris", sounds like it's not snowing :(`,
+              message: `Weather code ${currentWeatherCode} detected in Paris - not snowing.`,
             }),
             {
               status: 200,
